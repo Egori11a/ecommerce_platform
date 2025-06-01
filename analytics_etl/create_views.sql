@@ -19,7 +19,6 @@ DROP TABLE IF EXISTS v_seller_avg_order_value;
 
 -- ПЯТАЯ ВИТРИНА
 DROP TABLE IF EXISTS v_top_5_suppliers_by_revenue;
-DROP TABLE IF EXISTS v_supplier_avg_product_price;
 
 -- ШЕСТАЯ ВИТРИНА
 DROP TABLE IF EXISTS v_products_best_and_worst_rated;
@@ -169,17 +168,6 @@ CREATE TABLE v_top_5_suppliers_by_revenue
 ENGINE = MergeTree()
 ORDER BY total_revenue;
 
--- 2) Средняя цена товаров от каждого поставщика
-CREATE TABLE v_supplier_avg_product_price
-(
-    seller_key        UInt64,
-    company_name      String,
-    avg_unit_price    Decimal(10,2),
-    load_ts           DateTime64
-)
-ENGINE = MergeTree()
-ORDER BY avg_unit_price;
-
 --------------- ШЕСТАЯ ВИТРИНА ---------------
 -- 1) Распределение заказов по статусам
 CREATE TABLE v_products_best_and_worst_rated
@@ -216,7 +204,7 @@ ORDER BY review_count;
 
 --------------- СЕДЬМАЯ ВИТРИНА ---------------
 -- 1) Распределение заказов по статусам
-CREATE TABLE v_order_status_distribution
+CREATE TABLE IF NOT EXISTS v_order_status_distribution
 (
     order_status     String,
     order_count      UInt64,
@@ -227,7 +215,7 @@ ENGINE = MergeTree()
 ORDER BY order_count;
 
 -- 2) Количество заказов и выручка по дням
-CREATE TABLE v_daily_orders_and_revenue
+CREATE TABLE IF NOT EXISTS v_daily_orders_and_revenue
 (
     order_date       Date,
     order_count      UInt64,

@@ -370,28 +370,6 @@ def main():
         mode="append",
         properties=props
     )
-    # ------------------------------
-    # ВИТРИНА 5.2: СРЕДНЯЯ ЦЕНА ТОВАРОВ ОТ КАЖДОГО ПОСТАВЩИКА
-    # ------------------------------
-    from pyspark.sql.functions import from_json
-    from pyspark.sql.types import StructType, StringType
-
-    mongo_schema = StructType().add("unit_price", StringType())
-    d_products = d_products.withColumn("mongo_struct", from_json("mongo_attributes_json", mongo_schema))
-    d_products = d_products.withColumn("unit_price", col("mongo_struct.unit_price").cast("float"))
-    v_supplier_avg_product_price = (
-    d_products.join(d_sellers.select("seller_key", "company_name"), on="seller_key")
-    .groupBy("seller_key", "company_name")
-    .agg(spark_avg("unit_price").cast("decimal(10,2)").alias("avg_unit_price"))
-    .withColumn("load_ts", current_timestamp())
-    )
-
-    v_supplier_avg_product_price.write.jdbc(
-        url=jdbc_url,
-        table="v_supplier_avg_product_price",
-        mode="append",
-        properties=props
-    )
 
     print("Пятая витрина загружена в ClickHouse.")
 
