@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS d_years
 (
     `year_key`   UInt16,
     `load_ts`    DateTime64(3)
+)
 ENGINE = MergeTree()
 ORDER BY (`year_key`);
 
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS d_regions
     `country_key`         UInt32,
     `region_name_source`  String,
     `load_ts`             DateTime64(3)
+)
 ENGINE = MergeTree()
 ORDER BY (`region_key`);
 
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS d_cities
     `region_key`         UInt32,
     `city_name_source`   String,
     `load_ts`            DateTime64(3)
+)
 ENGINE = MergeTree()
 ORDER BY (`city_key`);
 
@@ -65,6 +68,7 @@ CREATE TABLE IF NOT EXISTS d_postal_codes
     `postal_code_key`    UInt64,
     `postal_code_source` String,
     `load_ts`            DateTime64(3)
+)
 ENGINE = MergeTree()
 ORDER BY (`postal_code_key`);
 
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS d_addresses
     `city_key`                UInt64,
     `postal_code_key`         UInt64,
     `load_ts`                 DateTime64(3)
+)
 ENGINE = MergeTree()
 ORDER BY (`address_key`);
 
