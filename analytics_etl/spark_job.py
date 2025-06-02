@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     col, sum as spark_sum, avg as spark_avg, count as spark_count, countDistinct,
-    row_number, current_timestamp, when, corr
+    row_number, current_timestamp, when, corr, lag
 )
 from pyspark.sql.window import Window
 from datetime import datetime
@@ -204,26 +204,31 @@ def main():
     # ------------------------------
     # ВИТРИНА 3.2: Сравнение выручки за разные периоды
     # ------------------------------
-    month_window = Window.orderBy(col("month_key").desc())
-    revenue_by_month = (
-        trends
-        .select("month_key", "total_revenue")
-        .withColumn("rn", row_number().over(month_window))
+    month_window = Window.orderBy(col("month_key"))
+
+    trends_with_lag = trends.select(
+        "month_key",
+        "total_revenue"
+    ).withColumn(
+        "prev_month_key", 
+        lag("month_key").over(month_window)
+    ).withColumn(
+        "prev_revenue", 
+        lag("total_revenue").over(month_window)
+    ).filter(
+        col("prev_month_key").isNotNull()
     )
-    rev_start = revenue_by_month.filter(col("rn") == 2).select(
-        col("month_key").alias("period_start_key"),
-        col("total_revenue").alias("revenue_start")
-    )
-    rev_end = revenue_by_month.filter(col("rn") == 1).select(
+
+    monthly_comparison = trends_with_lag.select(
+        col("prev_month_key").alias("period_start_key"),
         col("month_key").alias("period_end_key"),
-        col("total_revenue").alias("revenue_end")
+        col("prev_revenue").alias("revenue_start"),
+        col("total_revenue").alias("revenue_end"),
+        (col("total_revenue") - col("prev_revenue")).alias("revenue_diff"),
+        current_timestamp().alias("load_ts")
     )
-    comparison = (
-        rev_start.crossJoin(rev_end)
-        .withColumn("revenue_diff", col("revenue_end") - col("revenue_start"))
-        .withColumn("load_ts", current_timestamp())
-    )
-    comparison.write.jdbc(
+
+    monthly_comparison.write.jdbc(
         url=jdbc_url,
         table="v_sales_period_comparison",
         mode="append",
